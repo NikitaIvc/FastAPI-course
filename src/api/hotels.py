@@ -1,7 +1,10 @@
-from fastapi import Query, HTTPException
-from fastapi import APIRouter
+from typing import Annotated
 
-from schemas.hotels import Hotel, HotelPATCH
+from fastapi import APIRouter, Query, HTTPException
+
+from src.api.dependencies import PaginationParams, PaginationDep
+
+from src.schemas.hotels import Hotel, HotelPATCH
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -19,10 +22,9 @@ hotels = [
 
 @router.get("")
 def get_hotels(
+        pagination: PaginationDep,
         id: int | None = Query(None,description="Айди"),
         title: str | None = Query(None,description="Название отеля"),
-        page: int = Query(1, description="Номер страницы"),
-        per_page: int = Query(3, description="Элементов на странице"),
 ):
     hotels_ = []
     for hotel in hotels:
@@ -33,8 +35,8 @@ def get_hotels(
         hotels_.append(hotel)
 
 
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = (pagination.page - 1) * pagination.per_page
+    end = start + pagination.per_page
 
     if start >= len(hotels_):
         raise HTTPException(status_code=404, detail="Страница не найдена")
